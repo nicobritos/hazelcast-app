@@ -1,4 +1,4 @@
-package ar.edu.itba.server.query1;
+package ar.edu.itba.client.query1;
 
 import ar.edu.itba.api.Tree;
 import com.hazelcast.mapreduce.Context;

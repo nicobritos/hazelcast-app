@@ -1,4 +1,4 @@
-package ar.edu.itba.server.query1;
+package ar.edu.itba.client.query1;
 
 import com.hazelcast.mapreduce.Combiner;
 import com.hazelcast.mapreduce.CombinerFactory;

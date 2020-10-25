@@ -1,12 +1,12 @@
-package ar.edu.itba.client.query1;
+package ar.edu.itba.client.mappers;
 
 import ar.edu.itba.api.Tree;
 import com.hazelcast.mapreduce.Context;
 import com.hazelcast.mapreduce.Mapper;
 
-public class TreeNeighbourMapper implements Mapper<String, Tree, String, Long> {
+public class StreetCountMapper implements Mapper<String, Tree, String, Long> {
     @Override
     public void map(String key, Tree tree, Context<String, Long> context) {
-        context.emit(tree.getNeighbourhood(),1L);
+        context.emit(tree.getNeighbourhood() + '-' + tree.getStreet(), 1L);
     }
 }

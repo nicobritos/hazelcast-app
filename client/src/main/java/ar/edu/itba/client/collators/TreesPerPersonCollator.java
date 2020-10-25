@@ -1,4 +1,4 @@
-package ar.edu.itba.client.query1;
+package ar.edu.itba.client.collators;
 
 import com.hazelcast.mapreduce.Collator;
 

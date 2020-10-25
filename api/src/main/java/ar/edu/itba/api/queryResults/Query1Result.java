@@ -1,4 +1,4 @@
-package ar.edu.itba.api.query1;
+package ar.edu.itba.api.queryResults;
 
 import java.util.LinkedList;
 import java.util.List;

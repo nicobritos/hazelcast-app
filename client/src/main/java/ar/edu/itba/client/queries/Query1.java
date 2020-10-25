@@ -1,7 +1,11 @@
-package ar.edu.itba.client.query1;
+package ar.edu.itba.client.queries;
 
 import ar.edu.itba.api.Tree;
-import ar.edu.itba.api.query1.Query1Result;
+import ar.edu.itba.api.queryResults.Query1Result;
+import ar.edu.itba.client.collators.TreesPerPersonCollator;
+import ar.edu.itba.client.combiners.StringCountCombinerFactory;
+import ar.edu.itba.client.mappers.NeighbourCountMapper;
+import ar.edu.itba.client.reducers.NeighbourCountReducerFactory;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
@@ -30,8 +34,8 @@ public class Query1 {
 
         final Job<String, Tree> job = jobTracker.newJob(source);
         result = job
-                .mapper(new TreeNeighbourMapper())
-                .combiner(new NeighbourCountCombinerFactory())
+                .mapper(new NeighbourCountMapper())
+                .combiner(new StringCountCombinerFactory())
                 .reducer(new NeighbourCountReducerFactory())
                 .submit(new TreesPerPersonCollator(populations));
     }

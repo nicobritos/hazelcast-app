@@ -1,15 +1,15 @@
-package ar.edu.itba.client.query1;
+package ar.edu.itba.client.combiners;
 
 import com.hazelcast.mapreduce.Combiner;
 import com.hazelcast.mapreduce.CombinerFactory;
 
-public class NeighbourCountCombinerFactory implements CombinerFactory<String, Long, Long> {
+public class StringCountCombinerFactory implements CombinerFactory<String, Long, Long> {
     @Override
     public Combiner<Long, Long> newCombiner(String s) {
-        return new NeighbourCountCombiner();
+        return new StringCountCombiner();
     }
 
-    private class NeighbourCountCombiner extends Combiner<Long, Long> {
+    private class StringCountCombiner extends Combiner<Long, Long> {
         private long sum = 0;
 
         @Override

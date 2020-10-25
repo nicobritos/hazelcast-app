@@ -1,15 +1,10 @@
 package ar.edu.itba.client.queries;
 
 import ar.edu.itba.api.Tree;
-import ar.edu.itba.api.queryResults.Query3Result;
 import ar.edu.itba.api.queryResults.Query4Result;
 import ar.edu.itba.client.mapreduce.collators.MinQuantityCollator;
-import ar.edu.itba.client.mapreduce.collators.TopNCollator;
 import ar.edu.itba.client.mapreduce.combiners.StringCountCombinerFactory;
-import ar.edu.itba.client.mapreduce.mappers.NeighbourCountMapper;
-import ar.edu.itba.client.mapreduce.mappers.SpeciesDiameterMapper;
 import ar.edu.itba.client.mapreduce.mappers.SpeciesNeighbourCountMapper;
-import ar.edu.itba.client.mapreduce.reducers.AverageReducerFactory;
 import ar.edu.itba.client.mapreduce.reducers.NeighbourCountReducerFactory;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;

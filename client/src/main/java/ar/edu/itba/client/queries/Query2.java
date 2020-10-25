@@ -1,12 +1,11 @@
 package ar.edu.itba.client.queries;
 
 import ar.edu.itba.api.Tree;
-import ar.edu.itba.api.queryResults.Query1Result;
 import ar.edu.itba.api.queryResults.Query2Result;
-import ar.edu.itba.client.collators.MinQuantityCollator;
-import ar.edu.itba.client.combiners.StringCountCombinerFactory;
-import ar.edu.itba.client.mappers.StreetCountMapper;
-import ar.edu.itba.client.reducers.NeighbourMaxStreetReducerFactory;
+import ar.edu.itba.client.mapreduce.collators.MinQuantityCollator;
+import ar.edu.itba.client.mapreduce.combiners.StringCountCombinerFactory;
+import ar.edu.itba.client.mapreduce.mappers.StreetCountMapper;
+import ar.edu.itba.client.mapreduce.reducers.NeighbourMaxStreetReducerFactory;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;

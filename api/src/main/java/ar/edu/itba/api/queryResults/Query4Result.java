@@ -32,7 +32,7 @@ public class Query4Result implements Comparable<Query4Result>{
         for(String s1: set){
             for (String s2: set){
                 Query4Result result = new Query4Result(s1, s2);
-                if (!list.contains(result)){
+                if (!list.contains(result) && !s1.equals(s2)){
                     list.add(result);
                 }
             }

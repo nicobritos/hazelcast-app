@@ -5,8 +5,8 @@ import com.opencsv.*;
 import java.io.*;
 
 public abstract class CSVUtils {
-    public static CSVReader getReader(Reader reader) {
-        return new CSVReaderBuilder(reader)
+    public static CSVReaderHeaderAware getReader(Reader reader) {
+        return (CSVReaderHeaderAware) new CSVReaderHeaderAwareBuilder(reader)
                 .withCSVParser(
                         new CSVParserBuilder()
                                 .withSeparator(';')

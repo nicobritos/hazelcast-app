@@ -1,4 +1,4 @@
-package ar.edu.itba.client.mapreduce.mappers;
+package ar.edu.itba.api.mapreduce.mappers;
 
 import ar.edu.itba.api.Tree;
 import com.hazelcast.mapreduce.Context;

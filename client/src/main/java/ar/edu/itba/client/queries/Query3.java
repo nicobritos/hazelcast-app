@@ -2,9 +2,9 @@ package ar.edu.itba.client.queries;
 
 import ar.edu.itba.api.Tree;
 import ar.edu.itba.api.queryResults.Query3Result;
-import ar.edu.itba.client.mapreduce.collators.TopNCollator;
-import ar.edu.itba.client.mapreduce.mappers.SpeciesDiameterMapper;
-import ar.edu.itba.client.mapreduce.reducers.AverageReducerFactory;
+import ar.edu.itba.api.mapreduce.collators.TopNCollator;
+import ar.edu.itba.api.mapreduce.mappers.SpeciesDiameterMapper;
+import ar.edu.itba.api.mapreduce.reducers.AverageReducerFactory;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
@@ -22,9 +22,7 @@ import java.util.concurrent.ExecutionException;
 public class Query3 {
     private final ICompletableFuture<Map<String, Double>> result;
 
-    public Query3 (long qtyToShow) {
-        final ClientConfig ccfg = new ClientConfig();
-        final HazelcastInstance hz = HazelcastClient.newHazelcastClient(ccfg);
+    public Query3 (HazelcastInstance hz, long qtyToShow) {
         JobTracker jobTracker = hz.getJobTracker("biggest-tree-species");
         final IList<Tree> trees = hz.getList("tree-list");
         final KeyValueSource<String, Tree> source = KeyValueSource.fromList(trees);

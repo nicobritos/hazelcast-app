@@ -1,6 +1,9 @@
 package ar.edu.itba.api;
 
-public class Tree {
+
+import java.io.Serializable;
+
+public class Tree implements Serializable {
     private final City city;
     private final String species;
     private final String neighbourhood;

@@ -2,12 +2,10 @@ package ar.edu.itba.client.queries;
 
 import ar.edu.itba.api.Tree;
 import ar.edu.itba.api.queryResults.Query1Result;
-import ar.edu.itba.client.mapreduce.collators.TreesPerPersonCollator;
-import ar.edu.itba.client.mapreduce.combiners.StringCountCombinerFactory;
-import ar.edu.itba.client.mapreduce.mappers.NeighbourCountMapper;
-import ar.edu.itba.client.mapreduce.reducers.NeighbourCountReducerFactory;
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
+import ar.edu.itba.api.mapreduce.collators.TreesPerPersonCollator;
+import ar.edu.itba.api.mapreduce.combiners.StringCountCombinerFactory;
+import ar.edu.itba.api.mapreduce.mappers.NeighbourCountMapper;
+import ar.edu.itba.api.mapreduce.reducers.NeighbourCountReducerFactory;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IList;
@@ -24,9 +22,7 @@ import java.util.concurrent.ExecutionException;
 public class Query1 {
     private final ICompletableFuture<Map<String, Double>> result;
 
-    public Query1() {
-        final ClientConfig ccfg = new ClientConfig();
-        final HazelcastInstance hz = HazelcastClient.newHazelcastClient(ccfg);
+    public Query1(HazelcastInstance hz) {
         JobTracker jobTracker = hz.getJobTracker("trees-per-person");
         final IMap<String, Long> populations = hz.getMap("populations-map");
         final IList<Tree> trees = hz.getList("tree-list");

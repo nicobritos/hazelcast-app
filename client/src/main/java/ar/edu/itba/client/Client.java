@@ -1,6 +1,12 @@
 package ar.edu.itba.client;
 
+import ar.edu.itba.api.City;
+import ar.edu.itba.api.Tree;
+import ar.edu.itba.client.queries.Query1;
 import ar.edu.itba.client.utils.CommandUtils;
+import com.hazelcast.core.DistributedObject;
+import com.hazelcast.core.IList;
+import com.hazelcast.core.IMap;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
@@ -11,13 +17,13 @@ import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
 
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
-import java.util.Properties;
+import static ar.edu.itba.client.utils.CommandUtils.JAVA_OPT;
 
 public class Client {
     private static Logger logger = LoggerFactory.getLogger(Client.class);
-    private static final String JAVA_OPT = "D";
     //all the option/parameters/properties
     private static final String QUERY_OPT = "query";
     private static final String CITY_OPT = "city";
@@ -28,68 +34,64 @@ public class Client {
     private static final String N_OPT = "n";
     private static final String NAME_OPT = "name";
 
-
-    private String city;
-    private Integer queryNumber;
-    private List<String> addresses;
-    private String inputPath;
-    private String outputPath;
-    private Integer min; // Query2, Query 4
-    private Integer n; //Query3
-    private String speciesName; //Query4
-
-
-    public String getCity() {
-        return city;
-    }
-
-    public Integer getQueryNumber() {
-        return queryNumber;
-    }
-
-    public List<String> getAddresses() {
-        return addresses;
-    }
-
-    public String getInputPath() {
-        return inputPath;
-    }
-
-    public String getOutputPath() {
-        return outputPath;
-    }
-
-    public Integer getMin() {
-        return min;
-    }
-
-    public Integer getN() {
-        return n;
-    }
-
-    public String getSpeciesName() {
-        return speciesName;
-    }
-
-    public static void main(String[] args) {
-        Client client = new Client();
-
+    public static void main(String[] args) throws ExecutionException, InterruptedException, ParseException{
         //TODO: Parsear y armar la query pedida
         //query = .....
 
+        //get properties from command line
+        //Properties props = parseCommandLine(args);
+        Properties props = new Properties();
+        props.setProperty(NODES_ADDRS_OPT,"127.0.0.1:5701");
+        props.setProperty(QUERY_OPT,"1");
+
+        //get addresses
+        String[] clientAddresses = props.getProperty(NODES_ADDRS_OPT).split(";");
+
+        // Config and get hazelcast instance
         logger.info("tp2hazelcast Client Starting ...");
         ClientConfig cfg = new ClientConfig();
         GroupConfig groupConfig = cfg.getGroupConfig();
         groupConfig.setName("tp2-g5");
         groupConfig.setPassword("angi"); //AgusNicoGuidoIgnacio --> ANGI
         ClientNetworkConfig clientNetworkConfig = cfg.getNetworkConfig();
-        client.addresses.forEach(clientNetworkConfig::addAddress);
+        for (String addr : clientAddresses ) {
+            clientNetworkConfig.addAddress(addr);
+        }
+
 
         HazelcastInstance hz = HazelcastClient.newHazelcastClient(cfg);
 
         //TODO: Parsear csv
 
+        //TODO:lo que nico provee
+        List<Tree> treesList = new ArrayList<>();
+        treesList.add(new Tree(City.CABA, "hola1","hola2","hola3",2.0));
+        Map<String, Long> populationMap = new HashMap<>();
+        populationMap.put("hola2",1L);
+
+
+        //load tree list provided above
+        IList<Tree> iTreeList = hz.getList("tree-list");
+        iTreeList.addAll(treesList);
+
+        //if query1 add the population map
+        if(props.getProperty(QUERY_OPT).equals("1")){
+            IMap<String, Long> populationsIMap = hz.getMap("populations-map");
+            populationsIMap.putAll(populationMap);
+        }
+
         //TODO: Generar resultados de la query
+        Query1 query = new Query1(hz);
+        query.getResult().forEach(query1Result -> {
+            System.out.print("Neighbourhood:");
+            System.out.print(query1Result.getNeighbourhood());
+            System.out.print(" TreesPerPerson");
+            System.out.println(query1Result.getTreesPerPerson());
+        });
+
+        //remove all added objects
+        hz.getDistributedObjects()
+                .forEach(DistributedObject::destroy);
 
         //TODO: Escritura de archivos de salida
     }

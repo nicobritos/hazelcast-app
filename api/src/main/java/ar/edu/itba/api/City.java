@@ -1,6 +1,8 @@
 package ar.edu.itba.api;
 
-public enum City {
+import java.io.Serializable;
+
+public enum City implements Serializable {
     CABA,
     VANCOUVER;
 

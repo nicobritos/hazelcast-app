@@ -2,10 +2,10 @@ package ar.edu.itba.client.queries;
 
 import ar.edu.itba.api.Tree;
 import ar.edu.itba.api.queryResults.Query2Result;
-import ar.edu.itba.client.mapreduce.collators.MinQuantityCollator;
-import ar.edu.itba.client.mapreduce.combiners.StringCountCombinerFactory;
-import ar.edu.itba.client.mapreduce.mappers.StreetCountMapper;
-import ar.edu.itba.client.mapreduce.reducers.NeighbourMaxStreetReducerFactory;
+import ar.edu.itba.api.mapreduce.collators.MinQuantityCollator;
+import ar.edu.itba.api.mapreduce.combiners.StringCountCombinerFactory;
+import ar.edu.itba.api.mapreduce.mappers.StreetCountMapper;
+import ar.edu.itba.api.mapreduce.reducers.NeighbourMaxStreetReducerFactory;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
@@ -23,9 +23,7 @@ import java.util.concurrent.ExecutionException;
 public class Query2 {
     private final ICompletableFuture<Map<String, Long>> result;
 
-    public Query2(long min) {
-        final ClientConfig ccfg = new ClientConfig();
-        final HazelcastInstance hz = HazelcastClient.newHazelcastClient(ccfg);
+    public Query2(HazelcastInstance hz,long min) {
         JobTracker jobTracker = hz.getJobTracker("most-trees-per-neighbourhood");
         final IList<Tree> trees = hz.getList("tree-list");
         final KeyValueSource<String, Tree> source = KeyValueSource.fromList(trees);

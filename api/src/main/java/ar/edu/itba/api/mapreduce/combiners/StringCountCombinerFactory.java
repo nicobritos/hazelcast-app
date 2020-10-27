@@ -1,4 +1,4 @@
-package ar.edu.itba.client.mapreduce.combiners;
+package ar.edu.itba.api.mapreduce.combiners;
 
 import com.hazelcast.mapreduce.Combiner;
 import com.hazelcast.mapreduce.CombinerFactory;

@@ -1,4 +1,4 @@
-package ar.edu.itba.client.mapreduce.reducers;
+package ar.edu.itba.api.mapreduce.reducers;
 
 import com.hazelcast.mapreduce.Reducer;
 import com.hazelcast.mapreduce.ReducerFactory;

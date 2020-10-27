@@ -21,12 +21,12 @@
     - no hazelcast.xml if present
 
 -->
-<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.5.xsd"
+<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.7.xsd"
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <group>
-        <name>cluster</name>
-        <password>cluster-pass</password>
+        <name>tp2-g5</name>
+        <password>angi</password>
     </group>
     <management-center enabled="false">http://localhost:8080/mancenter</management-center>
     <network>

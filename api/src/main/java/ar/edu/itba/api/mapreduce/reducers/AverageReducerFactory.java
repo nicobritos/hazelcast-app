@@ -12,23 +12,24 @@ public class AverageReducerFactory implements ReducerFactory<String, Double, Dou
     }
 
     private class AverageReducer extends Reducer<Double, Double> {
-        private AtomicLong diameterSum;
-        private AtomicLong totalTrees;
+        private long diameterSum;
+        private long totalTrees;
 
         @Override
         public void beginReduce() {
-            diameterSum = new AtomicLong(0);
-            totalTrees = new AtomicLong(0);
+            diameterSum = 0;
+            totalTrees = 0;
         }
 
         @Override
         public void reduce(Double diameter) {
-            diameterSum.addAndGet(Double.doubleToLongBits(diameter));
+            diameterSum += diameter;
+            totalTrees++;
         }
 
         @Override
         public Double finalizeReduce() {
-            return diameterSum.doubleValue() / totalTrees.get();
+            return (double) diameterSum / totalTrees;
         }
     }
 }

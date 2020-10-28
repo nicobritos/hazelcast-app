@@ -16,12 +16,19 @@ import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.FileAppender;
+import org.apache.logging.log4j.core.config.AppenderRef;
+import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.builder.api.*;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.io.*;
 import java.util.*;
@@ -259,21 +266,21 @@ public class Client {
     }
 
     private static void createLogger(String logFilePath) {
-        ConfigurationBuilder<BuiltConfiguration> configurationBuilder = ConfigurationBuilderFactory.newConfigurationBuilder();
-        configurationBuilder.setStatusLevel(Level.INFO);
-
-        LayoutComponentBuilder layoutBuilder = configurationBuilder.newLayout("PatternLayout")
-                .addAttribute("pattern", "%d [%t] %-5level: %msg%n");
-        AppenderComponentBuilder appenderBuilder = configurationBuilder.newAppender("file", "FileAppender")
-                .addAttribute("fileName", logFilePath)
-                .addAttribute("filePattern", "target/archive/rolling-%d{MM-dd-yy}.log.gz")
-                .add(layoutBuilder);
-        configurationBuilder.add(appenderBuilder);
-
-        configurationBuilder.add(configurationBuilder.newLogger("logger", Level.INFO).add(configurationBuilder.newAppenderRef("file")));
-        configurationBuilder.add(configurationBuilder.newRootLogger(Level.INFO).add(configurationBuilder.newAppenderRef("file")));
-
-        LoggerContext ctx = Configurator.initialize(configurationBuilder.build());
-        logger = ctx.getRootLogger();
+        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        final Configuration config = ctx.getConfiguration();
+        Layout layout = PatternLayout.createLayout(PatternLayout.SIMPLE_CONVERSION_PATTERN, null, config,
+                null,null, false, false, null, null);
+        Appender appender = FileAppender.createAppender(logFilePath, "false", "false", "File", "true",
+                "false", "false", "4000", layout, null, "false", null, config);
+        appender.start();
+        config.addAppender(appender);
+        AppenderRef ref = AppenderRef.createAppenderRef("File", null, null);
+        AppenderRef[] refs = new AppenderRef[] {ref};
+        LoggerConfig loggerConfig = LoggerConfig.createLogger(false, Level.INFO, "Client",
+                "true", refs, null, config, null );
+        loggerConfig.addAppender(appender, null, null);
+        config.addLogger("Client", loggerConfig);
+        ctx.updateLoggers();
+        logger = ctx.getLogger("Client");
     }
 }

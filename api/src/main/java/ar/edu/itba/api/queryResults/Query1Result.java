@@ -32,9 +32,12 @@ public class Query1Result implements Comparable<Query1Result> {
     // Trees per person descending, then neighbourhood ascending
     @Override
     public int compareTo(Query1Result o) {
-        if(treesPerPerson < o.treesPerPerson){
+        long trees = (long) (treesPerPerson * 100);
+        long otrees = (long) (o.treesPerPerson * 100);
+
+        if(trees < otrees){
             return 1;
-        } else if(treesPerPerson == o.treesPerPerson) {
+        } else if(trees == otrees) {
             return neighbourhood.compareTo(o.neighbourhood);
         } else {
             return -1;

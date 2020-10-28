@@ -26,8 +26,9 @@ public abstract class CSVUtils {
                 CSVFormat.DEFAULT.
                         withQuoteMode(QuoteMode.MINIMAL)
                         .withQuote('"')
-                        .withRecordSeparator(';')
+                        .withRecordSeparator('\n')
                         .withHeader(headers)
+                        .withDelimiter(';')
         );
     }
 

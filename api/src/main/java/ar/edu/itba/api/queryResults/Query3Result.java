@@ -31,6 +31,15 @@ public class Query3Result implements Comparable<Query3Result>{
 
     @Override
     public int compareTo(Query3Result o) {
-        return Double.compare(o.diameterAverage, diameterAverage);
+        long d = (long) (diameterAverage * 100);
+        long od = (long) (o.diameterAverage * 100);
+
+        if(d < od){
+            return 1;
+        } else if(d == od) {
+            return species.compareTo(o.species);
+        } else {
+            return -1;
+        }
     }
 }

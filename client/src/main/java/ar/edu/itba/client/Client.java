@@ -8,30 +8,31 @@ import ar.edu.itba.api.utils.CommandUtils;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
-import com.opencsv.CSVWriter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.csv.CSVPrinter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.FileAppender;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.*;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.lang.reflect.Array;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static ar.edu.itba.api.utils.CommandUtils.JAVA_OPT;
+import static ar.edu.itba.client.utils.CSVUtils.CSV_EXTENSION;
 
 public class Client {
-    private static final Logger logger = LoggerFactory.getLogger(Client.class);
+    private static Logger logger;
+
     //all the option/parameters/properties
     private static final String QUERY_OPT = "query";
     private static final String CITY_OPT = "city";
@@ -48,8 +49,8 @@ public class Client {
     private static final String TREES_FILENAME = "arboles";
     private static final String CITIES_FILENAME = "barrios";
 
-    private static final String CSV_EXTENSION = "csv";
-    private static final String QUERY_OUT_FILENAME = "query";
+    private static final String TIME_FILENAME = "time";
+    private static final String TXT_EXTENSION = "txt";
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, ParseException{
         //TODO: Parsear y armar la query pedida
@@ -57,20 +58,25 @@ public class Client {
 
         //get properties from command line
         Properties props = parseCommandLine(args);
+        createLogger(FileUtils.formatFilePath(props.getProperty(OUT_PATH_OPT), TIME_FILENAME + props.getProperty(QUERY_OPT), TXT_EXTENSION));
+        logger.info("Start");
 
         //get addresses
         String[] clientAddresses = props.getProperty(NODES_ADDRS_OPT).split(";");
 
         HazelcastInstance hz = connect(clientAddresses);
+        logger.info("Inicio de lectura de archivos");
         loadFiles(props, hz);
+        logger.info("Fin de lectura de archivos");
+
+        logger.info("Inicio map/reduce");
         try {
             runQuery(props, hz);
         } catch (Exception e) {
             disconnect(hz);
             throw e;
         }
-
-        //TODO: Escritura de archivos de salida
+        logger.info("Fin map/reduce");
 
         disconnect(hz);
     }
@@ -250,5 +256,24 @@ public class Client {
                 args,
                 options.toArray(new Option[0])
         );
+    }
+
+    private static void createLogger(String logFilePath) {
+        ConfigurationBuilder<BuiltConfiguration> configurationBuilder = ConfigurationBuilderFactory.newConfigurationBuilder();
+        configurationBuilder.setStatusLevel(Level.INFO);
+
+        LayoutComponentBuilder layoutBuilder = configurationBuilder.newLayout("PatternLayout")
+                .addAttribute("pattern", "%d [%t] %-5level: %msg%n");
+        AppenderComponentBuilder appenderBuilder = configurationBuilder.newAppender("file", "FileAppender")
+                .addAttribute("fileName", logFilePath)
+                .addAttribute("filePattern", "target/archive/rolling-%d{MM-dd-yy}.log.gz")
+                .add(layoutBuilder);
+        configurationBuilder.add(appenderBuilder);
+
+        configurationBuilder.add(configurationBuilder.newLogger("logger", Level.INFO).add(configurationBuilder.newAppenderRef("file")));
+        configurationBuilder.add(configurationBuilder.newRootLogger(Level.INFO).add(configurationBuilder.newAppenderRef("file")));
+
+        LoggerContext ctx = Configurator.initialize(configurationBuilder.build());
+        logger = ctx.getRootLogger();
     }
 }

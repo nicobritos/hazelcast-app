@@ -70,5 +70,18 @@ public class Query5Result implements Comparable<Query5Result>{
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Query5Result result = (Query5Result) o;
+        return thousandOfTrees == result.thousandOfTrees &&
+                Objects.equals(neighbourhood1, result.neighbourhood1) &&
+                Objects.equals(neighbourhood2, result.neighbourhood2);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(neighbourhood1, neighbourhood2, thousandOfTrees);
+    }
 }

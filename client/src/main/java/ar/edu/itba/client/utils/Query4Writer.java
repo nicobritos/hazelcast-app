@@ -19,6 +19,7 @@ public class Query4Writer extends QueryWriter {
         for (Query4Result result : results) {
             this.printer.printRecord(result.getNeighbourhood1(), result.getNeighbourhood2());
         }
+        this.printer.flush();
     }
 
     protected final String[] getHeaders() {

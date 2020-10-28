@@ -19,6 +19,7 @@ public class Query2Writer extends QueryWriter {
         for (Query2Result result : results) {
             this.printer.printRecord(result.getNeighbourhood(), result.getStreet(), result.getTreesQty());
         }
+        this.printer.flush();
     }
 
     protected final String[] getHeaders() {

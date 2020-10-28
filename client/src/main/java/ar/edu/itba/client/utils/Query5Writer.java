@@ -19,6 +19,7 @@ public class Query5Writer extends QueryWriter {
         for (Query5Result result : results) {
             this.printer.printRecord(result.getThousandOfTrees(), result.getNeighbourhood1(), result.getNeighbourhood2());
         }
+        this.printer.flush();
     }
 
     protected final String[] getHeaders() {

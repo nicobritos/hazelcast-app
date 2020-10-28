@@ -5,6 +5,7 @@ import org.apache.commons.csv.CSVPrinter;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Locale;
 
 public class Query1Writer extends QueryWriter {
     private static final String[] HEADERS = {"BARRIO", "ARBOLES_POR_HABITANTE"};
@@ -17,7 +18,7 @@ public class Query1Writer extends QueryWriter {
 
     public void write(Collection<Query1Result> results) throws IOException {
         for (Query1Result result : results) {
-            System.out.println(result.getNeighbourhood() + ": " + String.format("%.2f", result.getTreesPerPerson()));
+            System.out.println(result.getNeighbourhood() + ": " + String.format(Locale.US, "%.2f", result.getTreesPerPerson()));
             this.printer.printRecord(result.getNeighbourhood(), String.format("%.2f", result.getTreesPerPerson()));
         }
         this.printer.flush();

@@ -40,6 +40,6 @@ public class Query2Result implements Comparable<Query2Result>{
 
     @Override
     public int compareTo(Query2Result o) {
-        return street.compareTo(o.street);
+        return neighbourhood.compareTo(o.neighbourhood);
     }
 }

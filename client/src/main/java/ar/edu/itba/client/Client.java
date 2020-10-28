@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -247,7 +248,7 @@ public class Client {
 
         return CommandUtils.parseCommandLine(
                 args,
-                options.toArray(new Option[3])
+                options.toArray(new Option[0])
         );
     }
 }

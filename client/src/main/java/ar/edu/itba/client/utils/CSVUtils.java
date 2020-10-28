@@ -21,14 +21,12 @@ public abstract class CSVUtils {
     }
 
     public static CSVPrinter getWriter(Writer writer, String[] headers) throws IOException {
-        return new CSVPrinter(
-                writer,
-                CSVFormat.DEFAULT.
-                        withQuoteMode(QuoteMode.MINIMAL)
-                        .withQuote('"')
-                        .withRecordSeparator(';')
-                        .withHeader(headers)
-        );
+        return CSVFormat.newFormat(';')
+                .withQuoteMode(QuoteMode.MINIMAL)
+                .withQuote('"')
+                .withRecordSeparator(System.getProperty("line.separator"))
+                .withHeader(headers)
+                .print(writer);
     }
 
     public static Reader getFileReader(String filepath) throws IOException {

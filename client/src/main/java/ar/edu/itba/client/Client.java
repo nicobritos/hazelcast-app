@@ -90,52 +90,34 @@ public class Client {
         } else {
             throw new IllegalArgumentException("Supplied city value is unsupported: " + city);
         }
-//        try {
-//            csvParser.parseTrees(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city, CSV_EXTENSION));
-//        } catch (IOException e) {
-//            System.err.println(e.getMessage());
-//            throw e;
-//        }
+        try {
+            csvParser.parseTrees(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city, CSV_EXTENSION));
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            throw e;
+        }
 
         //load tree list provided above
         IList<Tree> iTreeList = hz.getList("tree-list");
         iTreeList.addAll(csvParser.getTrees());
-        iTreeList.add(new Tree(City.CABA, "No identificado", "3", "RIOBAMBA 74", 142));
-        iTreeList.add(new Tree(City.CABA, "Fraxinus pennsylvanica", "7", "La portena 90", 142));
-        iTreeList.add(new Tree(City.CABA, "Fraxinus excelsior", "10", "Pergamino 74", 143));
-        iTreeList.add(new Tree(City.CABA, "Fraxinus pennsylvanica", "15", "Viale Luis 74", 143));
-        iTreeList.add(new Tree(City.CABA, "No identificado", "15", "Fraga 74", 143));
-        iTreeList.add(new Tree(City.CABA, "Fraxinus pennsylvanica", "15", "Viale Luis 74", 143));
 
         //if query1 add the population map
-//        if(props.getProperty(QUERY_OPT).equals("1")){
-//            csvParser.parseCities(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city, CSV_EXTENSION));
-//
+        if(props.getProperty(QUERY_OPT).equals("1")){
+            csvParser.parseCities(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city, CSV_EXTENSION));
+
             IMap<String, Long> populationsIMap = hz.getMap("populations-map");
             populationsIMap.putAll(csvParser.getPopulation());
-            populationsIMap.put("3", 19L);
-            populationsIMap.put("7", 24L);
-            populationsIMap.put("10", 17L);
-            populationsIMap.put("15", 18L);
-//        }
+        }
 
         switch (props.getProperty(QUERY_OPT)){
             case "1":
                 Query1 query1 = new Query1(hz);
                 List<Query1Result> results1 = query1.getResult();
-                System.out.println("Barrio\tArboles por persona");
-                for (Query1Result result : results1){
-                    System.out.printf("%s\t\t%.2f\n", result.getNeighbourhood(), result.getTreesPerPerson());
-                }
                 // TODO: mandar resultados al out csv
                 break;
             case "2":
                 Query2 query2 = new Query2(hz, Long.parseLong(props.getProperty(MIN_OPT)));
                 List<Query2Result> results2 = query2.getResult();
-                System.out.println("Barrio\tCalle\t\t\tCantidad");
-                for (Query2Result result : results2){
-                    System.out.printf("%s\t\t%s\t\t%s\n", result.getNeighbourhood(), result.getStreet(), result.getTreesQty());
-                }
                 // TODO: mandar resultados al out csv
                 break;
             case "3":

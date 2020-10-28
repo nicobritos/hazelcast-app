@@ -57,56 +57,21 @@ public class Client {
         //get addresses
         String[] clientAddresses = props.getProperty(NODES_ADDRS_OPT).split(";");
 
-        // Config and get hazelcast instance
-        logger.info("tp2hazelcast Client Starting ...");
-        ClientConfig cfg = new ClientConfig();
-        GroupConfig groupConfig = cfg.getGroupConfig();
-        groupConfig.setName("tp2-g5");
-        groupConfig.setPassword("angi"); //AgusNicoGuidoIgnacio --> ANGI
-        ClientNetworkConfig clientNetworkConfig = cfg.getNetworkConfig();
-        for (String addr : clientAddresses ) {
-            if(addr.charAt(0) == '\''){
-                addr = addr.substring(1);
-            }
-            if(addr.charAt(addr.length() - 1) == '\''){
-                addr = addr.substring(0, addr.length() - 1);
-            }
-            System.out.println(addr);
-            clientNetworkConfig.addAddress(addr);
-        }
-
-        HazelcastInstance hz = HazelcastClient.newHazelcastClient(cfg);
-
-        String city = props.getProperty(CITY_OPT);
-        CSVParser csvParser;
-        if (city.equals(CABA_CITY)) {
-            csvParser = new CABACSVParser();
-        } else if (city.equals(VANCOUVER_CITY)) {
-            csvParser = new VancouverCSVParser();
-        } else {
-            throw new IllegalArgumentException("Supplied city value is unsupported: " + city);
-        }
+        HazelcastInstance hz = connect(clientAddresses);
+        loadFiles(props, hz);
         try {
-            csvParser.parseTrees(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city, CSV_EXTENSION));
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
+            runQuery(props, hz);
+        } catch (Exception e) {
+            disconnect(hz);
             throw e;
-        } finally {
-            hz.shutdown();
         }
 
-        //load tree list provided above
-        IList<Tree> iTreeList = hz.getList("tree-list");
-        iTreeList.addAll(csvParser.getTrees());
+        //TODO: Escritura de archivos de salida
 
-        //if query1 add the population map
-        if(props.getProperty(QUERY_OPT).equals("1")){
-            csvParser.parseCities(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city, CSV_EXTENSION));
+        disconnect(hz);
+    }
 
-            IMap<String, Long> populationsIMap = hz.getMap("populations-map");
-            populationsIMap.putAll(csvParser.getPopulation());
-        }
-
+    private static void runQuery(Properties props, HazelcastInstance hz) throws InterruptedException, ExecutionException {
         switch (Integer.parseInt(props.getProperty(QUERY_OPT))){
             case 1:
                 Query1 query1 = new Query1(hz);
@@ -134,12 +99,77 @@ public class Client {
                 // TODO: mandar resultados al out csv
                 break;
         }
+    }
 
+    private static void loadFiles(Properties props, HazelcastInstance hz) throws IOException {
+        String city = props.getProperty(CITY_OPT);
+        CSVParser csvParser;
+        if (city.equals(CABA_CITY)) {
+            csvParser = new CABACSVParser();
+        } else if (city.equals(VANCOUVER_CITY)) {
+            csvParser = new VancouverCSVParser();
+        } else {
+            disconnect(hz);
+            throw new IllegalArgumentException("Supplied city value is unsupported: " + city);
+        }
+        try {
+            csvParser.parseTrees(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city, CSV_EXTENSION));
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            disconnect(hz);
+            throw e;
+        }
+
+        //load tree list provided above
+        IList<Tree> iTreeList = hz.getList("tree-list");
+        try {
+            iTreeList.addAll(csvParser.getTrees());
+        } catch (Exception e) {
+            // Heap out of memory exception and others
+            disconnect(hz);
+            throw e;
+        }
+
+        //if query1 add the population map
+        if(props.getProperty(QUERY_OPT).equals("1")){
+            csvParser.parseCities(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city, CSV_EXTENSION));
+
+            IMap<String, Long> populationsIMap = hz.getMap("populations-map");
+            try {
+                populationsIMap.putAll(csvParser.getPopulation());
+            } catch (Exception e) {
+                // Heap out of memory exception and others
+                disconnect(hz);
+                throw e;
+            }
+        }
+    }
+
+    private static HazelcastInstance connect(String[] clientAddresses) {
+        // Config and get hazelcast instance
+        logger.info("tp2hazelcast Client Starting ...");
+        ClientConfig cfg = new ClientConfig();
+        GroupConfig groupConfig = cfg.getGroupConfig();
+        groupConfig.setName("tp2-g5");
+        groupConfig.setPassword("angi"); //AgusNicoGuidoIgnacio --> ANGI
+        ClientNetworkConfig clientNetworkConfig = cfg.getNetworkConfig();
+        for (String addr : clientAddresses) {
+            if(addr.charAt(0) == '\''){
+                addr = addr.substring(1);
+            }
+            if(addr.charAt(addr.length() - 1) == '\''){
+                addr = addr.substring(0, addr.length() - 1);
+            }
+            System.out.println(addr);
+            clientNetworkConfig.addAddress(addr);
+        }
+
+        return HazelcastClient.newHazelcastClient(cfg);
+    }
+
+    private static void disconnect(HazelcastInstance hz) {
         //remove all added objects
         hz.getDistributedObjects().forEach(DistributedObject::destroy);
-
-        //TODO: Escritura de archivos de salida
-
         // disconnect from cluster
         hz.shutdown();
     }

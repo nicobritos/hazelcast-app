@@ -1,6 +1,5 @@
 package ar.edu.itba.client;
 
-import ar.edu.itba.api.City;
 import ar.edu.itba.api.Tree;
 import ar.edu.itba.api.queryResults.*;
 import ar.edu.itba.client.queries.*;
@@ -22,10 +21,7 @@ import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
 
-import javax.print.DocFlavor.INPUT_STREAM;
 import java.io.IOException;
-import java.nio.file.Paths;
-import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -95,6 +91,8 @@ public class Client {
         } catch (IOException e) {
             System.err.println(e.getMessage());
             throw e;
+        } finally {
+            hz.shutdown();
         }
 
         //load tree list provided above
@@ -135,7 +133,6 @@ public class Client {
                 List<Query5Result> results5 = query5.getResult();
                 // TODO: mandar resultados al out csv
                 break;
-
         }
 
         //remove all added objects
@@ -175,31 +172,41 @@ public class Client {
                 args,
                 queryOption, cityOption,addressesOption,inPathOption,outPathOption
         );
-        properties.putAll(parseNonRequiredCommandLine(args));
+
+        properties.putAll(parseQueryArgsCommandLine(Integer.parseInt(properties.getProperty(QUERY_OPT)), args));
+
         return properties;
     }
 
     // Apache Commons CLI necesita que parseemos los opcionales antes, porque
     // el parser siempre chequea requeridos, y si mezclamos opciones requeridas
     // y no requeridas estas ultimas se tomaran como requeridas
-    private static Properties parseNonRequiredCommandLine(String[] args) throws ParseException {
+    private static Properties parseQueryArgsCommandLine(int query, String[] args) throws ParseException {
         //specific options
-        Option minOpt = new Option(JAVA_OPT, "specifies the path to the output files");
-        minOpt.setArgName(MIN_OPT);
-        minOpt.setRequired(false);
 
-        Option nOpt = new Option(JAVA_OPT, "specifies the path to the output files");
-        nOpt.setArgName(N_OPT);
-        nOpt.setRequired(false);
+        Collection<Option> options = new LinkedList<>();
+        if (query == 2 || query == 4) {
+            Option minOpt = new Option(JAVA_OPT, "specifies the path to the output files");
+            minOpt.setArgName(MIN_OPT);
+            minOpt.setRequired(true);
+            options.add(minOpt);
+        }
+        if (query == 3) {
+            Option nOpt = new Option(JAVA_OPT, "specifies the path to the output files");
+            nOpt.setArgName(N_OPT);
+            nOpt.setRequired(true);
+            options.add(nOpt);
+        }
+        if (query == 4) {
+            Option nameOpt = new Option(JAVA_OPT, "specifies the path to the output files");
+            nameOpt.setArgName(NAME_OPT);
+            nameOpt.setRequired(true);
+            options.add(nameOpt);
+        }
 
-        Option nameOpt = new Option(JAVA_OPT, "specifies the path to the output files");
-        nameOpt.setArgName(NAME_OPT);
-        nameOpt.setRequired(false);
-
-        //return the properties given
         return CommandUtils.parseCommandLine(
                 args,
-                minOpt,nameOpt,nOpt
+                options.toArray(new Option[3])
         );
     }
 }

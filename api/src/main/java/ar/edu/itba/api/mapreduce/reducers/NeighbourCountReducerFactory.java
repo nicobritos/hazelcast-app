@@ -13,21 +13,21 @@ public class NeighbourCountReducerFactory implements ReducerFactory<String, Long
     }
 
     private class NeighbourCountReducer extends Reducer<Long, Long>{
-        private AtomicLong sum;
+        private long sum;
 
         @Override
         public void beginReduce() {
-            sum = new AtomicLong(0);
+            sum = 0;
         }
 
         @Override
         public void reduce(Long num) {
-            sum.addAndGet(num);
+            sum += num;
         }
 
         @Override
         public Long finalizeReduce() {
-            return sum.get();
+            return sum;
         }
     }
 }

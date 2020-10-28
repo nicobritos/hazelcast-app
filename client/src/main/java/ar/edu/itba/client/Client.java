@@ -1,11 +1,10 @@
 package ar.edu.itba.client;
 
-import ar.edu.itba.api.City;
 import ar.edu.itba.api.Tree;
 import ar.edu.itba.client.queries.Query1;
 import ar.edu.itba.client.utils.CABACSVParser;
 import ar.edu.itba.client.utils.CSVParser;
-import ar.edu.itba.client.utils.CommandUtils;
+import ar.edu.itba.api.utils.CommandUtils;
 import ar.edu.itba.client.utils.VancouverCSVParser;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IList;
@@ -24,7 +23,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-import static ar.edu.itba.client.utils.CommandUtils.JAVA_OPT;
+import static ar.edu.itba.api.utils.CommandUtils.JAVA_OPT;
 
 public class Client {
     private static Logger logger = LoggerFactory.getLogger(Client.class);

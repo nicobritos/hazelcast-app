@@ -11,7 +11,7 @@ public class ThousandTreesCollator implements Collator<Map.Entry<String, Long>, 
     public Map<String, Long> collate(Iterable<Map.Entry<String, Long>> iterable) {
         Map<String, Long> map = new HashMap<>();
         for (Map.Entry<String, Long> entry : iterable){
-            map.put(entry.getKey(), entry.getValue() % 1000);
+            map.put(entry.getKey(), entry.getValue() - entry.getValue() % 1000);
         }
         return map;
     }

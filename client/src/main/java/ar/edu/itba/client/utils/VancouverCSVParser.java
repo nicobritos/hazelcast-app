@@ -2,6 +2,7 @@ package ar.edu.itba.client.utils;
 
 import ar.edu.itba.api.City;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,12 +22,12 @@ public class VancouverCSVParser extends CSVParser {
     }
 
     @Override
-    public void parseTrees(String filepath) {
+    public void parseTrees(String filepath) throws IOException {
         super.parseTrees(filepath, City.VANCOUVER, treeHeaders);
     }
 
     @Override
-    public void parseCities(String filepath) {
+    public void parseCities(String filepath) throws IOException {
         super.parseCities(filepath, cityHeaders);
     }
 }

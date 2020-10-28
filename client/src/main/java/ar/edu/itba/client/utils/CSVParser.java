@@ -21,7 +21,7 @@ public abstract class CSVParser {
         return this.population;
     }
 
-    protected void parseTrees(String filepath, City city, Map<TreeHeaders, String> headersMap) {
+    protected void parseTrees(String filepath, City city, Map<TreeHeaders, String> headersMap) throws IOException {
         this.parse(filepath, record -> {
             this.trees.add(new Tree(
                 city,
@@ -33,29 +33,29 @@ public abstract class CSVParser {
         });
     }
 
-    protected void parseCities(String filepath, Map<CityHeaders, String> headersMap) {
+    protected void parseCities(String filepath, Map<CityHeaders, String> headersMap) throws IOException {
         this.parse(filepath, record -> {
             this.population.put(
                 record.get(headersMap.get(CityHeaders.NAME)),
-                Long.parseLong(headersMap.get(CityHeaders.POPULATION))
+                Long.parseLong(record.get(headersMap.get(CityHeaders.POPULATION)))
             );
         });
     }
 
-    private void parse(String filepath, Consumer<Map<String, String>> recordConsumer) {
+    private void parse(String filepath, Consumer<Map<String, String>> recordConsumer) throws IOException {
         try (CSVReaderHeaderAware reader = CSVUtils.getReader(CSVUtils.getFileReader(filepath))) {
             Map<String, String> record;
             while ((record = reader.readMap()) != null) {
                 recordConsumer.accept(record);
             }
         } catch (IOException | CsvValidationException e) {
-            System.err.println("Error while trying to read CSV file from: " + filepath + ". File not found, not enough permissions or format error");
+            throw new IOException("Error while trying to read CSV file from: " + filepath + ". File not found, not enough permissions or format error");
         }
     }
 
-    public abstract void parseTrees(String filepath);
+    public abstract void parseTrees(String filepath) throws IOException;
 
-    public abstract void parseCities(String filepath);
+    public abstract void parseCities(String filepath) throws IOException;
 
     protected enum TreeHeaders {
         CITY, STREET, SCIENTIFIC_NAME, DIAMETER

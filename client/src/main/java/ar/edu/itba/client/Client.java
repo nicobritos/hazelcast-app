@@ -5,6 +5,7 @@ import ar.edu.itba.client.queries.Query1;
 import ar.edu.itba.client.utils.CABACSVParser;
 import ar.edu.itba.client.utils.CSVParser;
 import ar.edu.itba.api.utils.CommandUtils;
+import ar.edu.itba.client.utils.FileUtils;
 import ar.edu.itba.client.utils.VancouverCSVParser;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IList;
@@ -19,7 +20,10 @@ import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
 
+import javax.print.DocFlavor.INPUT_STREAM;
+import java.io.IOException;
 import java.nio.file.Paths;
+import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -43,7 +47,9 @@ public class Client {
     private static final String TREES_FILENAME = "arboles";
     private static final String CITIES_FILENAME = "barrios";
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException, ParseException{
+    private static final String CSV_EXTENSION = "csv";
+
+    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, ParseException{
         //TODO: Parsear y armar la query pedida
         //query = .....
 
@@ -64,7 +70,6 @@ public class Client {
             clientNetworkConfig.addAddress(addr);
         }
 
-
         HazelcastInstance hz = HazelcastClient.newHazelcastClient(cfg);
 
         String city = props.getProperty(CITY_OPT);
@@ -76,7 +81,12 @@ public class Client {
         } else {
             throw new IllegalArgumentException("Supplied city value is unsupported: " + city);
         }
-        csvParser.parseTrees(Paths.get(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city).toString());
+        try {
+            csvParser.parseTrees(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city, CSV_EXTENSION));
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            throw e;
+        }
 
         //load tree list provided above
         IList<Tree> iTreeList = hz.getList("tree-list");
@@ -84,7 +94,7 @@ public class Client {
 
         //if query1 add the population map
         if(props.getProperty(QUERY_OPT).equals("1")){
-            csvParser.parseCities(Paths.get(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city).toString());
+            csvParser.parseCities(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city, CSV_EXTENSION));
 
             IMap<String, Long> populationsIMap = hz.getMap("populations-map");
             populationsIMap.putAll(csvParser.getPopulation());
@@ -129,6 +139,19 @@ public class Client {
         outPathOption.setArgName(OUT_PATH_OPT);
         outPathOption.setRequired(true);
 
+        //return the properties given
+        Properties properties = CommandUtils.parseCommandLine(
+                args,
+                queryOption, cityOption,addressesOption,inPathOption,outPathOption
+        );
+        properties.putAll(parseNonRequiredCommandLine(args));
+        return properties;
+    }
+
+    // Apache Commons CLI necesita que parseemos los opcionales antes, porque
+    // el parser siempre chequea requeridos, y si mezclamos opciones requeridas
+    // y no requeridas estas ultimas se tomaran como requeridas
+    private static Properties parseNonRequiredCommandLine(String[] args) throws ParseException {
         //specific options
         Option minOpt = new Option(JAVA_OPT, "specifies the path to the output files");
         minOpt.setArgName(MIN_OPT);
@@ -145,7 +168,6 @@ public class Client {
         //return the properties given
         return CommandUtils.parseCommandLine(
                 args,
-                queryOption, cityOption,addressesOption,inPathOption,outPathOption,
                 minOpt,nameOpt,nOpt
         );
     }

@@ -21,8 +21,12 @@ public abstract class CSVUtils {
                 .build();
     }
 
-    public static Reader getFileReader(String filepath) {
-        return new InputStreamReader(ClassLoader.getSystemResourceAsStream(filepath));
+    public static Reader getFileReader(String filepath) throws IOException {
+        try {
+            return new InputStreamReader(ClassLoader.getSystemResourceAsStream(filepath));
+        } catch (NullPointerException e) {
+            throw new IOException("File " + filepath + " not found");
+        }
     }
 
     public static Writer getFileWriter(String filepath) throws FileNotFoundException {

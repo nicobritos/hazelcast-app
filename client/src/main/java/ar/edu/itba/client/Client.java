@@ -10,22 +10,36 @@ import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.FileAppender;
+import org.apache.logging.log4j.core.config.AppenderRef;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.config.builder.api.*;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static ar.edu.itba.api.utils.CommandUtils.JAVA_OPT;
+import static ar.edu.itba.client.utils.CSVUtils.CSV_EXTENSION;
 
 public class Client {
-    private static final Logger logger = LoggerFactory.getLogger(Client.class);
+    private static Logger logger;
+
     //all the option/parameters/properties
     private static final String QUERY_OPT = "query";
     private static final String CITY_OPT = "city";
@@ -42,8 +56,8 @@ public class Client {
     private static final String TREES_FILENAME = "arboles";
     private static final String CITIES_FILENAME = "barrios";
 
-    private static final String CSV_EXTENSION = "csv";
-    private static final String QUERY_OUT_FILENAME = "query";
+    private static final String TIME_FILENAME = "time";
+    private static final String TXT_EXTENSION = "txt";
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, ParseException{
         //TODO: Parsear y armar la query pedida
@@ -51,20 +65,25 @@ public class Client {
 
         //get properties from command line
         Properties props = parseCommandLine(args);
+        createLogger(FileUtils.formatFilePath(props.getProperty(OUT_PATH_OPT), TIME_FILENAME + props.getProperty(QUERY_OPT), TXT_EXTENSION));
+        logger.info("Start");
 
         //get addresses
         String[] clientAddresses = props.getProperty(NODES_ADDRS_OPT).split(";");
 
         HazelcastInstance hz = connect(clientAddresses);
+        logger.info("Inicio de lectura de archivos");
         loadFiles(props, hz);
+        logger.info("Fin de lectura de archivos");
+
+        logger.info("Inicio map/reduce");
         try {
             runQuery(props, hz);
         } catch (Exception e) {
             disconnect(hz);
             throw e;
         }
-
-        //TODO: Escritura de archivos de salida
+        logger.info("Fin map/reduce");
 
         disconnect(hz);
     }
@@ -135,6 +154,7 @@ public class Client {
             disconnect(hz);
             throw e;
         }
+
         //if query1 add the population map
         if(props.getProperty(QUERY_OPT).equals("1")){
             csvParser.parseCities(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city, CSV_EXTENSION));
@@ -243,5 +263,24 @@ public class Client {
                 args,
                 options.toArray(new Option[0])
         );
+    }
+
+    private static void createLogger(String logFilePath) {
+        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        final Configuration config = ctx.getConfiguration();
+        Layout layout = PatternLayout.createLayout(PatternLayout.SIMPLE_CONVERSION_PATTERN, null, config,
+                null,null, false, false, null, null);
+        Appender appender = FileAppender.createAppender(logFilePath, "false", "false", "File", "true",
+                "false", "false", "4000", layout, null, "false", null, config);
+        appender.start();
+        config.addAppender(appender);
+        AppenderRef ref = AppenderRef.createAppenderRef("File", null, null);
+        AppenderRef[] refs = new AppenderRef[] {ref};
+        LoggerConfig loggerConfig = LoggerConfig.createLogger(false, Level.INFO, "Client",
+                "true", refs, null, config, null );
+        loggerConfig.addAppender(appender, null, null);
+        config.addLogger("Client", loggerConfig);
+        ctx.updateLoggers();
+        logger = ctx.getLogger("Client");
     }
 }

@@ -3,7 +3,10 @@ package ar.edu.itba.client;
 import ar.edu.itba.api.City;
 import ar.edu.itba.api.Tree;
 import ar.edu.itba.client.queries.Query1;
+import ar.edu.itba.client.utils.CABACSVParser;
+import ar.edu.itba.client.utils.CSVParser;
 import ar.edu.itba.client.utils.CommandUtils;
+import ar.edu.itba.client.utils.VancouverCSVParser;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
@@ -17,6 +20,7 @@ import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
 
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -34,15 +38,18 @@ public class Client {
     private static final String N_OPT = "n";
     private static final String NAME_OPT = "name";
 
+    private static final String CABA_CITY = "BUE";
+    private static final String VANCOUVER_CITY = "VAN";
+
+    private static final String TREES_FILENAME = "arboles";
+    private static final String CITIES_FILENAME = "barrios";
+
     public static void main(String[] args) throws ExecutionException, InterruptedException, ParseException{
         //TODO: Parsear y armar la query pedida
         //query = .....
 
         //get properties from command line
-        //Properties props = parseCommandLine(args);
-        Properties props = new Properties();
-        props.setProperty(NODES_ADDRS_OPT,"127.0.0.1:5701");
-        props.setProperty(QUERY_OPT,"1");
+        Properties props = parseCommandLine(args);
 
         //get addresses
         String[] clientAddresses = props.getProperty(NODES_ADDRS_OPT).split(";");
@@ -61,23 +68,26 @@ public class Client {
 
         HazelcastInstance hz = HazelcastClient.newHazelcastClient(cfg);
 
-        //TODO: Parsear csv
-
-        //TODO:lo que nico provee
-        List<Tree> treesList = new ArrayList<>();
-        treesList.add(new Tree(City.CABA, "hola1","hola2","hola3",2.0));
-        Map<String, Long> populationMap = new HashMap<>();
-        populationMap.put("hola2",1L);
-
+        String city = props.getProperty(CITY_OPT);
+        CSVParser csvParser;
+        if (city.equals(CABA_CITY)) {
+            csvParser = new CABACSVParser();
+        } else if (city.equals(VANCOUVER_CITY)) {
+            csvParser = new VancouverCSVParser();
+        } else {
+            throw new IllegalArgumentException("Supplied city value is unsupported: " + city);
+        }
+        csvParser.parseTrees(Paths.get(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city).toString());
+        csvParser.parseCities(Paths.get(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city).toString());
 
         //load tree list provided above
         IList<Tree> iTreeList = hz.getList("tree-list");
-        iTreeList.addAll(treesList);
+        iTreeList.addAll(csvParser.getTrees());
 
         //if query1 add the population map
         if(props.getProperty(QUERY_OPT).equals("1")){
             IMap<String, Long> populationsIMap = hz.getMap("populations-map");
-            populationsIMap.putAll(populationMap);
+            populationsIMap.putAll(csvParser.getPopulation());
         }
 
         //TODO: Generar resultados de la query
@@ -95,6 +105,7 @@ public class Client {
 
         //TODO: Escritura de archivos de salida
     }
+
     //TODO: check this vs System.getProperty("property name");
     private static Properties parseCommandLine(String[] args) throws ParseException {
         // basic options needed

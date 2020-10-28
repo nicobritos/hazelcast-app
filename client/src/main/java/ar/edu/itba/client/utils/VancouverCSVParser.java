@@ -20,10 +20,12 @@ public class VancouverCSVParser extends CSVParser {
         }
     }
 
+    @Override
     public void parseTrees(String filepath) {
         super.parseTrees(filepath, City.VANCOUVER, treeHeaders);
     }
 
+    @Override
     public void parseCities(String filepath) {
         super.parseCities(filepath, cityHeaders);
     }

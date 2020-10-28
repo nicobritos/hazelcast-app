@@ -53,6 +53,10 @@ public abstract class CSVParser {
         }
     }
 
+    public abstract void parseTrees(String filepath);
+
+    public abstract void parseCities(String filepath);
+
     protected enum TreeHeaders {
         CITY, STREET, SCIENTIFIC_NAME, DIAMETER
     }

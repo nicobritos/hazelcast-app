@@ -1,6 +1,5 @@
 package ar.edu.itba.client;
 
-import ar.edu.itba.api.City;
 import ar.edu.itba.api.Tree;
 import ar.edu.itba.api.queryResults.*;
 import ar.edu.itba.client.queries.*;
@@ -22,10 +21,7 @@ import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
 
-import javax.print.DocFlavor.INPUT_STREAM;
 import java.io.IOException;
-import java.nio.file.Paths;
-import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -61,6 +57,95 @@ public class Client {
         //get addresses
         String[] clientAddresses = props.getProperty(NODES_ADDRS_OPT).split(";");
 
+        HazelcastInstance hz = connect(clientAddresses);
+        loadFiles(props, hz);
+        try {
+            runQuery(props, hz);
+        } catch (Exception e) {
+            disconnect(hz);
+            throw e;
+        }
+
+        //TODO: Escritura de archivos de salida
+
+        disconnect(hz);
+    }
+
+    private static void runQuery(Properties props, HazelcastInstance hz) throws InterruptedException, ExecutionException {
+        switch (Integer.parseInt(props.getProperty(QUERY_OPT))){
+            case 1:
+                Query1 query1 = new Query1(hz);
+                List<Query1Result> results1 = query1.getResult();
+                // TODO: mandar resultados al out csv
+                break;
+            case 2:
+                Query2 query2 = new Query2(hz, Long.parseLong(props.getProperty(MIN_OPT)));
+                List<Query2Result> results2 = query2.getResult();
+                // TODO: mandar resultados al out csv
+                break;
+            case 3:
+                Query3 query3 = new Query3(hz, Long.parseLong(props.getProperty(N_OPT)));
+                List<Query3Result> results3 = query3.getResult();
+                // TODO: mandar resultados al out csv
+                break;
+            case 4:
+                Query4 query4 = new Query4(hz, props.getProperty(NAME_OPT), Long.parseLong(props.getProperty(MIN_OPT)));
+                List<Query4Result> results4 = query4.getResult();
+                // TODO: mandar resultados al out csv
+                break;
+            case 5:
+                Query5 query5 = new Query5(hz);
+                List<Query5Result> results5 = query5.getResult();
+                // TODO: mandar resultados al out csv
+                break;
+        }
+    }
+
+    private static void loadFiles(Properties props, HazelcastInstance hz) throws IOException {
+        String city = props.getProperty(CITY_OPT);
+        CSVParser csvParser;
+        if (city.equals(CABA_CITY)) {
+            csvParser = new CABACSVParser();
+        } else if (city.equals(VANCOUVER_CITY)) {
+            csvParser = new VancouverCSVParser();
+        } else {
+            disconnect(hz);
+            throw new IllegalArgumentException("Supplied city value is unsupported: " + city);
+        }
+        try {
+            csvParser.parseTrees(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city, CSV_EXTENSION));
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            disconnect(hz);
+            throw e;
+        }
+
+        //load tree list provided above
+        IList<Tree> iTreeList = hz.getList("tree-list");
+        try {
+            iTreeList.addAll(csvParser.getTrees());
+        } catch (Exception e) {
+            // Heap out of memory exception and others
+            disconnect(hz);
+            throw e;
+        }
+
+        //if query1 add the population map
+        if(props.getProperty(QUERY_OPT).equals("1")){
+            csvParser.parseCities(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city, CSV_EXTENSION));
+
+            IMap<String, Long> populationsIMap = hz.getMap("populations-map");
+            try {
+                populationsIMap.putAll(csvParser.getPopulation());
+            } catch (Exception e) {
+                // Heap out of memory exception and others
+                disconnect(hz);
+                throw e;
+            }
+        }
+    }
+
+    private static HazelcastInstance connect(String[] clientAddresses) {
         // Config and get hazelcast instance
         logger.info("tp2hazelcast Client Starting ...");
         ClientConfig cfg = new ClientConfig();
@@ -68,7 +153,7 @@ public class Client {
         groupConfig.setName("tp2-g5");
         groupConfig.setPassword("angi"); //AgusNicoGuidoIgnacio --> ANGI
         ClientNetworkConfig clientNetworkConfig = cfg.getNetworkConfig();
-        for (String addr : clientAddresses ) {
+        for (String addr : clientAddresses) {
             if(addr.charAt(0) == '\''){
                 addr = addr.substring(1);
             }
@@ -79,70 +164,12 @@ public class Client {
             clientNetworkConfig.addAddress(addr);
         }
 
-        HazelcastInstance hz = HazelcastClient.newHazelcastClient(cfg);
+        return HazelcastClient.newHazelcastClient(cfg);
+    }
 
-        String city = props.getProperty(CITY_OPT);
-        CSVParser csvParser;
-        if (city.equals(CABA_CITY)) {
-            csvParser = new CABACSVParser();
-        } else if (city.equals(VANCOUVER_CITY)) {
-            csvParser = new VancouverCSVParser();
-        } else {
-            throw new IllegalArgumentException("Supplied city value is unsupported: " + city);
-        }
-        try {
-            csvParser.parseTrees(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city, CSV_EXTENSION));
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            throw e;
-        }
-
-        //load tree list provided above
-        IList<Tree> iTreeList = hz.getList("tree-list");
-        iTreeList.addAll(csvParser.getTrees());
-
-        //if query1 add the population map
-        if(props.getProperty(QUERY_OPT).equals("1")){
-            csvParser.parseCities(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city, CSV_EXTENSION));
-
-            IMap<String, Long> populationsIMap = hz.getMap("populations-map");
-            populationsIMap.putAll(csvParser.getPopulation());
-        }
-
-        switch (props.getProperty(QUERY_OPT)){
-            case "1":
-                Query1 query1 = new Query1(hz);
-                List<Query1Result> results1 = query1.getResult();
-                // TODO: mandar resultados al out csv
-                break;
-            case "2":
-                Query2 query2 = new Query2(hz, Long.parseLong(props.getProperty(MIN_OPT)));
-                List<Query2Result> results2 = query2.getResult();
-                // TODO: mandar resultados al out csv
-                break;
-            case "3":
-                Query3 query3 = new Query3(hz, Long.parseLong(props.getProperty(N_OPT)));
-                List<Query3Result> results3 = query3.getResult();
-                // TODO: mandar resultados al out csv
-                break;
-            case "4":
-                Query4 query4 = new Query4(hz, props.getProperty(NAME_OPT), Long.parseLong(props.getProperty(MIN_OPT)));
-                List<Query4Result> results4 = query4.getResult();
-                // TODO: mandar resultados al out csv
-                break;
-            case "5":
-                Query5 query5 = new Query5(hz);
-                List<Query5Result> results5 = query5.getResult();
-                // TODO: mandar resultados al out csv
-                break;
-
-        }
-
+    private static void disconnect(HazelcastInstance hz) {
         //remove all added objects
         hz.getDistributedObjects().forEach(DistributedObject::destroy);
-
-        //TODO: Escritura de archivos de salida
-
         // disconnect from cluster
         hz.shutdown();
     }
@@ -175,31 +202,41 @@ public class Client {
                 args,
                 queryOption, cityOption,addressesOption,inPathOption,outPathOption
         );
-        properties.putAll(parseNonRequiredCommandLine(args));
+
+        properties.putAll(parseQueryArgsCommandLine(Integer.parseInt(properties.getProperty(QUERY_OPT)), args));
+
         return properties;
     }
 
     // Apache Commons CLI necesita que parseemos los opcionales antes, porque
     // el parser siempre chequea requeridos, y si mezclamos opciones requeridas
     // y no requeridas estas ultimas se tomaran como requeridas
-    private static Properties parseNonRequiredCommandLine(String[] args) throws ParseException {
+    private static Properties parseQueryArgsCommandLine(int query, String[] args) throws ParseException {
         //specific options
-        Option minOpt = new Option(JAVA_OPT, "specifies the path to the output files");
-        minOpt.setArgName(MIN_OPT);
-        minOpt.setRequired(false);
 
-        Option nOpt = new Option(JAVA_OPT, "specifies the path to the output files");
-        nOpt.setArgName(N_OPT);
-        nOpt.setRequired(false);
+        Collection<Option> options = new LinkedList<>();
+        if (query == 2 || query == 4) {
+            Option minOpt = new Option(JAVA_OPT, "specifies the path to the output files");
+            minOpt.setArgName(MIN_OPT);
+            minOpt.setRequired(true);
+            options.add(minOpt);
+        }
+        if (query == 3) {
+            Option nOpt = new Option(JAVA_OPT, "specifies the path to the output files");
+            nOpt.setArgName(N_OPT);
+            nOpt.setRequired(true);
+            options.add(nOpt);
+        }
+        if (query == 4) {
+            Option nameOpt = new Option(JAVA_OPT, "specifies the path to the output files");
+            nameOpt.setArgName(NAME_OPT);
+            nameOpt.setRequired(true);
+            options.add(nameOpt);
+        }
 
-        Option nameOpt = new Option(JAVA_OPT, "specifies the path to the output files");
-        nameOpt.setArgName(NAME_OPT);
-        nameOpt.setRequired(false);
-
-        //return the properties given
         return CommandUtils.parseCommandLine(
                 args,
-                minOpt,nameOpt,nOpt
+                options.toArray(new Option[3])
         );
     }
 }

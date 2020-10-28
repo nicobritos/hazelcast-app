@@ -107,28 +107,28 @@ public class Client {
             populationsIMap.putAll(csvParser.getPopulation());
         }
 
-        switch (props.getProperty(QUERY_OPT)){
-            case "1":
+        switch (Integer.parseInt(props.getProperty(QUERY_OPT))){
+            case 1:
                 Query1 query1 = new Query1(hz);
                 List<Query1Result> results1 = query1.getResult();
                 // TODO: mandar resultados al out csv
                 break;
-            case "2":
+            case 2:
                 Query2 query2 = new Query2(hz, Long.parseLong(props.getProperty(MIN_OPT)));
                 List<Query2Result> results2 = query2.getResult();
                 // TODO: mandar resultados al out csv
                 break;
-            case "3":
+            case 3:
                 Query3 query3 = new Query3(hz, Long.parseLong(props.getProperty(N_OPT)));
                 List<Query3Result> results3 = query3.getResult();
                 // TODO: mandar resultados al out csv
                 break;
-            case "4":
+            case 4:
                 Query4 query4 = new Query4(hz, props.getProperty(NAME_OPT), Long.parseLong(props.getProperty(MIN_OPT)));
                 List<Query4Result> results4 = query4.getResult();
                 // TODO: mandar resultados al out csv
                 break;
-            case "5":
+            case 5:
                 Query5 query5 = new Query5(hz);
                 List<Query5Result> results5 = query5.getResult();
                 // TODO: mandar resultados al out csv

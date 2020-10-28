@@ -17,7 +17,7 @@ public class Query1Writer extends QueryWriter {
 
     public void write(Collection<Query1Result> results) throws IOException {
         for (Query1Result result : results) {
-            this.printer.printRecord(result.getNeighbourhood(), result.getTreesPerPerson());
+            this.printer.printRecord(result.getNeighbourhood(), String.format("%.2f", result.getTreesPerPerson()));
         }
     }
 

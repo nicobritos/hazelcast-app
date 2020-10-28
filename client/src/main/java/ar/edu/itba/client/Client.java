@@ -221,19 +221,19 @@ public class Client {
 
         Collection<Option> options = new LinkedList<>();
         if (query == 2 || query == 4) {
-            Option minOpt = new Option(JAVA_OPT, "specifies the path to the output files");
+            Option minOpt = new Option(JAVA_OPT, "min parameter: specific to queries 2 and 4");
             minOpt.setArgName(MIN_OPT);
             minOpt.setRequired(true);
             options.add(minOpt);
         }
         if (query == 3) {
-            Option nOpt = new Option(JAVA_OPT, "specifies the path to the output files");
+            Option nOpt = new Option(JAVA_OPT, "n parameter: specific to query 3");
             nOpt.setArgName(N_OPT);
             nOpt.setRequired(true);
             options.add(nOpt);
         }
         if (query == 4) {
-            Option nameOpt = new Option(JAVA_OPT, "specifies the path to the output files");
+            Option nameOpt = new Option(JAVA_OPT, "name parameter: specific to query 4");
             nameOpt.setArgName(NAME_OPT);
             nameOpt.setRequired(true);
             options.add(nameOpt);

@@ -17,7 +17,7 @@ public class Query3Writer extends QueryWriter {
 
     public void write(Collection<Query3Result> results) throws IOException {
         for (Query3Result result : results) {
-            this.printer.printRecord(result.getSpecies(), result.getDiameterAverage());
+            this.printer.printRecord(result.getSpecies(), String.format("%.2f", result.getDiameterAverage()));
         }
     }
 

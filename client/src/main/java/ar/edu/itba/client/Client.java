@@ -78,7 +78,6 @@ public class Client {
             throw new IllegalArgumentException("Supplied city value is unsupported: " + city);
         }
         csvParser.parseTrees(Paths.get(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city).toString());
-        csvParser.parseCities(Paths.get(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city).toString());
 
         //load tree list provided above
         IList<Tree> iTreeList = hz.getList("tree-list");
@@ -86,6 +85,8 @@ public class Client {
 
         //if query1 add the population map
         if(props.getProperty(QUERY_OPT).equals("1")){
+            csvParser.parseCities(Paths.get(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city).toString());
+
             IMap<String, Long> populationsIMap = hz.getMap("populations-map");
             populationsIMap.putAll(csvParser.getPopulation());
         }

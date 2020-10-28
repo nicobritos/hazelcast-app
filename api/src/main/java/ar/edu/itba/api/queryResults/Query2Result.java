@@ -1,5 +1,7 @@
 package ar.edu.itba.api.queryResults;
 
+import com.hazelcast.map.impl.MapEntrySimple;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +29,10 @@ public class Query2Result implements Comparable<Query2Result>{
         return treesQty;
     }
 
-    public static List<Query2Result> listFrom(Map<String, Long> map){
+    public static List<Query2Result> listFrom(Map<String, MapEntrySimple<String, Long>> map){
         List<Query2Result> list = new LinkedList<>();
         for (String key: map.keySet()){
-            String[] s = key.split("-");
-            if (s.length != 2){
-                throw new IllegalArgumentException("Clave del mapa mal formada: " + key);
-            }
-            list.add(new Query2Result(s[0], s[1], map.get(key)));
+            list.add(new Query2Result(key, map.get(key).getKey(), map.get(key).getValue()));
         }
         return list;
     }

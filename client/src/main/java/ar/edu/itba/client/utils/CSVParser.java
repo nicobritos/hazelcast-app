@@ -10,8 +10,8 @@ import java.util.*;
 import java.util.function.Consumer;
 
 public abstract class CSVParser {
-    protected Collection<Tree> trees = new LinkedList<>();
-    protected Map<String, Long> population = new HashMap<>();
+    private final Collection<Tree> trees = new LinkedList<>();
+    private final Map<String, Long> population = new HashMap<>();
 
     public Collection<Tree> getTrees() {
         return this.trees;

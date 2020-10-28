@@ -5,7 +5,7 @@ import com.hazelcast.mapreduce.Context;
 import com.hazelcast.mapreduce.Mapper;
 
 public class SpeciesNeighbourCountMapper implements Mapper<String, Tree, String, Long> {
-    private String species;
+    private final String species;
 
     public SpeciesNeighbourCountMapper(String species) {
         this.species = species;

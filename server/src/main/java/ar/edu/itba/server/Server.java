@@ -17,7 +17,7 @@ import java.util.Properties;
 import static ar.edu.itba.api.utils.CommandUtils.JAVA_OPT;
 
 public class Server {
-    private static Logger logger = LoggerFactory.getLogger(Server.class);
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
     private static final String INTERFACES_OPT = "i";
 
     public static void main(String[] args) throws ParseException {

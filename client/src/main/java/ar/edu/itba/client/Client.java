@@ -1,7 +1,9 @@
 package ar.edu.itba.client;
 
+import ar.edu.itba.api.City;
 import ar.edu.itba.api.Tree;
-import ar.edu.itba.client.queries.Query1;
+import ar.edu.itba.api.queryResults.*;
+import ar.edu.itba.client.queries.*;
 import ar.edu.itba.client.utils.CABACSVParser;
 import ar.edu.itba.client.utils.CSVParser;
 import ar.edu.itba.api.utils.CommandUtils;
@@ -30,7 +32,7 @@ import java.util.concurrent.ExecutionException;
 import static ar.edu.itba.api.utils.CommandUtils.JAVA_OPT;
 
 public class Client {
-    private static Logger logger = LoggerFactory.getLogger(Client.class);
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
     //all the option/parameters/properties
     private static final String QUERY_OPT = "query";
     private static final String CITY_OPT = "city";
@@ -67,6 +69,13 @@ public class Client {
         groupConfig.setPassword("angi"); //AgusNicoGuidoIgnacio --> ANGI
         ClientNetworkConfig clientNetworkConfig = cfg.getNetworkConfig();
         for (String addr : clientAddresses ) {
+            if(addr.charAt(0) == '\''){
+                addr = addr.substring(1);
+            }
+            if(addr.charAt(addr.length() - 1) == '\''){
+                addr = addr.substring(0, addr.length() - 1);
+            }
+            System.out.println(addr);
             clientNetworkConfig.addAddress(addr);
         }
 
@@ -81,39 +90,79 @@ public class Client {
         } else {
             throw new IllegalArgumentException("Supplied city value is unsupported: " + city);
         }
-        try {
-            csvParser.parseTrees(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city, CSV_EXTENSION));
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            throw e;
-        }
+//        try {
+//            csvParser.parseTrees(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), TREES_FILENAME + city, CSV_EXTENSION));
+//        } catch (IOException e) {
+//            System.err.println(e.getMessage());
+//            throw e;
+//        }
 
         //load tree list provided above
         IList<Tree> iTreeList = hz.getList("tree-list");
         iTreeList.addAll(csvParser.getTrees());
+        iTreeList.add(new Tree(City.CABA, "No identificado", "3", "RIOBAMBA 74", 142));
+        iTreeList.add(new Tree(City.CABA, "Fraxinus pennsylvanica", "7", "La portena 90", 142));
+        iTreeList.add(new Tree(City.CABA, "Fraxinus excelsior", "10", "Pergamino 74", 143));
+        iTreeList.add(new Tree(City.CABA, "Fraxinus pennsylvanica", "15", "Viale Luis 74", 143));
+        iTreeList.add(new Tree(City.CABA, "No identificado", "15", "Fraga 74", 143));
+        iTreeList.add(new Tree(City.CABA, "Fraxinus pennsylvanica", "15", "Viale Luis 74", 143));
 
         //if query1 add the population map
-        if(props.getProperty(QUERY_OPT).equals("1")){
-            csvParser.parseCities(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city, CSV_EXTENSION));
-
+//        if(props.getProperty(QUERY_OPT).equals("1")){
+//            csvParser.parseCities(FileUtils.formatFilePath(props.getProperty(IN_PATH_OPT), CITIES_FILENAME + city, CSV_EXTENSION));
+//
             IMap<String, Long> populationsIMap = hz.getMap("populations-map");
             populationsIMap.putAll(csvParser.getPopulation());
+            populationsIMap.put("3", 19L);
+            populationsIMap.put("7", 24L);
+            populationsIMap.put("10", 17L);
+            populationsIMap.put("15", 18L);
+//        }
+
+        switch (props.getProperty(QUERY_OPT)){
+            case "1":
+                Query1 query1 = new Query1(hz);
+                List<Query1Result> results1 = query1.getResult();
+                System.out.println("Barrio\tArboles por persona");
+                for (Query1Result result : results1){
+                    System.out.printf("%s\t\t%.2f\n", result.getNeighbourhood(), result.getTreesPerPerson());
+                }
+                // TODO: mandar resultados al out csv
+                break;
+            case "2":
+                Query2 query2 = new Query2(hz, Long.parseLong(props.getProperty(MIN_OPT)));
+                List<Query2Result> results2 = query2.getResult();
+                System.out.println("Barrio\tCalle\t\t\tCantidad");
+                for (Query2Result result : results2){
+                    System.out.printf("%s\t\t%s\t\t%s\n", result.getNeighbourhood(), result.getStreet(), result.getTreesQty());
+                }
+                // TODO: mandar resultados al out csv
+                break;
+            case "3":
+                Query3 query3 = new Query3(hz, Long.parseLong(props.getProperty(N_OPT)));
+                List<Query3Result> results3 = query3.getResult();
+                // TODO: mandar resultados al out csv
+                break;
+            case "4":
+                Query4 query4 = new Query4(hz, props.getProperty(NAME_OPT), Long.parseLong(props.getProperty(MIN_OPT)));
+                List<Query4Result> results4 = query4.getResult();
+                // TODO: mandar resultados al out csv
+                break;
+            case "5":
+                Query5 query5 = new Query5(hz);
+                List<Query5Result> results5 = query5.getResult();
+                // TODO: mandar resultados al out csv
+                break;
+
         }
 
-        //TODO: Generar resultados de la query
-        Query1 query = new Query1(hz);
-        query.getResult().forEach(query1Result -> {
-            System.out.print("Neighbourhood:");
-            System.out.print(query1Result.getNeighbourhood());
-            System.out.print(" TreesPerPerson");
-            System.out.println(query1Result.getTreesPerPerson());
-        });
-
         //remove all added objects
-        hz.getDistributedObjects()
-                .forEach(DistributedObject::destroy);
+        hz.getDistributedObjects().forEach(DistributedObject::destroy);
 
         //TODO: Escritura de archivos de salida
+
+        // disconnect from cluster
+        hz.shutdown();
     }
 
     //TODO: check this vs System.getProperty("property name");

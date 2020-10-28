@@ -2,3 +2,5 @@
 *.iml
 .idea/*
 */target/*
+query*.csv
+time*.txt

@@ -3,16 +3,15 @@ package ar.edu.itba.client;
 import ar.edu.itba.api.Tree;
 import ar.edu.itba.api.queryResults.*;
 import ar.edu.itba.client.queries.*;
-import ar.edu.itba.client.utils.CABACSVParser;
-import ar.edu.itba.client.utils.CSVParser;
+import ar.edu.itba.client.utils.*;
 import ar.edu.itba.api.utils.CommandUtils;
-import ar.edu.itba.client.utils.FileUtils;
-import ar.edu.itba.client.utils.VancouverCSVParser;
 import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.IMap;
+import com.opencsv.CSVWriter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.hazelcast.client.HazelcastClient;
@@ -21,7 +20,10 @@ import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
 
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -46,6 +48,7 @@ public class Client {
     private static final String CITIES_FILENAME = "barrios";
 
     private static final String CSV_EXTENSION = "csv";
+    private static final String QUERY_OUT_FILENAME = "query";
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, ParseException{
         //TODO: Parsear y armar la query pedida
@@ -71,32 +74,40 @@ public class Client {
         disconnect(hz);
     }
 
-    private static void runQuery(Properties props, HazelcastInstance hz) throws InterruptedException, ExecutionException {
-        switch (Integer.parseInt(props.getProperty(QUERY_OPT))){
+    private static void runQuery(Properties props, HazelcastInstance hz) throws InterruptedException, ExecutionException, IOException {
+        int query = Integer.parseInt(props.getProperty(QUERY_OPT));
+        String outPath = props.getProperty(OUT_PATH_OPT);
+
+        switch (query) {
             case 1:
                 Query1 query1 = new Query1(hz);
                 List<Query1Result> results1 = query1.getResult();
-                // TODO: mandar resultados al out csv
+                Query1Writer query1Writer = new Query1Writer(outPath);
+                query1Writer.write(results1);
                 break;
             case 2:
                 Query2 query2 = new Query2(hz, Long.parseLong(props.getProperty(MIN_OPT)));
                 List<Query2Result> results2 = query2.getResult();
-                // TODO: mandar resultados al out csv
+                Query2Writer query2Writer = new Query2Writer(outPath);
+                query2Writer.write(results2);
                 break;
             case 3:
                 Query3 query3 = new Query3(hz, Long.parseLong(props.getProperty(N_OPT)));
                 List<Query3Result> results3 = query3.getResult();
-                // TODO: mandar resultados al out csv
+                Query3Writer query3Writer = new Query3Writer(outPath);
+                query3Writer.write(results3);
                 break;
             case 4:
                 Query4 query4 = new Query4(hz, props.getProperty(NAME_OPT), Long.parseLong(props.getProperty(MIN_OPT)));
                 List<Query4Result> results4 = query4.getResult();
-                // TODO: mandar resultados al out csv
+                Query4Writer query4Writer = new Query4Writer(outPath);
+                query4Writer.write(results4);
                 break;
             case 5:
                 Query5 query5 = new Query5(hz);
                 List<Query5Result> results5 = query5.getResult();
-                // TODO: mandar resultados al out csv
+                Query5Writer query5Writer = new Query5Writer(outPath);
+                query5Writer.write(results5);
                 break;
         }
     }

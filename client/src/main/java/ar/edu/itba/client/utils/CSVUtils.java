@@ -1,10 +1,15 @@
 package ar.edu.itba.client.utils;
 
 import com.opencsv.*;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.QuoteMode;
 
 import java.io.*;
 
 public abstract class CSVUtils {
+    public static final String CSV_EXTENSION = "csv";
+
     public static CSVReaderHeaderAware getReader(Reader reader) {
         return (CSVReaderHeaderAware) new CSVReaderHeaderAwareBuilder(reader)
                 .withCSVParser(
@@ -15,10 +20,15 @@ public abstract class CSVUtils {
                 .build();
     }
 
-    public static ICSVWriter getWriter(Writer writer) {
-        return new CSVWriterBuilder(writer)
-                .withSeparator(';')
-                .build();
+    public static CSVPrinter getWriter(Writer writer, String[] headers) throws IOException {
+        return new CSVPrinter(
+                writer,
+                CSVFormat.DEFAULT.
+                        withQuoteMode(QuoteMode.MINIMAL)
+                        .withQuote('"')
+                        .withRecordSeparator(';')
+                        .withHeader(headers)
+        );
     }
 
     public static Reader getFileReader(String filepath) throws IOException {

@@ -21,6 +21,10 @@
       <artifactId>hazelcast-all</artifactId>
       <version>3.7.8</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
+    </dependency>
 
     <!--  For parsing the csv  -->
     <dependency>

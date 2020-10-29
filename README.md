@@ -9,7 +9,8 @@ mvn clean package
 Dentro de la carpeta ```server/target``` descomprimir el .tg.gz y correr el script ```run-server.sh```
 
 Este script posee las siguientes opciones:
-* ```-Di=ipAddr```: permite cambiar las interfaces de red. Las mismas tiene que estar separadas por ;
+* ```-Di=ipAddr```: Permite cambiar las interfaces de red. Las mismas tiene que estar separadas por ;
+* ```-DhzPath```: Path del archivo hazelcast.xml para la configuración del cluster ;
 
 ## Ejecución de los clientes
 

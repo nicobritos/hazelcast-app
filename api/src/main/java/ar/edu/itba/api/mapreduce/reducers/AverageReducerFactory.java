@@ -3,8 +3,6 @@ package ar.edu.itba.api.mapreduce.reducers;
 import com.hazelcast.mapreduce.Reducer;
 import com.hazelcast.mapreduce.ReducerFactory;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 public class AverageReducerFactory implements ReducerFactory<String, Double, Double> {
     @Override
     public Reducer<Double, Double> newReducer(String key) {

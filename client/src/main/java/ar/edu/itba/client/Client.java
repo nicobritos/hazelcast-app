@@ -2,19 +2,19 @@ package ar.edu.itba.client;
 
 import ar.edu.itba.api.Tree;
 import ar.edu.itba.api.queryResults.*;
+import ar.edu.itba.api.utils.CommandUtils;
 import ar.edu.itba.client.queries.*;
 import ar.edu.itba.client.utils.*;
-import ar.edu.itba.api.utils.CommandUtils;
-import com.hazelcast.core.DistributedObject;
-import com.hazelcast.core.IList;
-import com.hazelcast.core.IMap;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.ParseException;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
+import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IList;
+import com.hazelcast.core.IMap;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
@@ -24,14 +24,14 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.FileAppender;
 import org.apache.logging.log4j.core.config.AppenderRef;
 import org.apache.logging.log4j.core.config.Configuration;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.apache.logging.log4j.core.config.builder.api.*;
-import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 import static ar.edu.itba.api.utils.CommandUtils.JAVA_OPT;
@@ -60,8 +60,6 @@ public class Client {
     private static final String TXT_EXTENSION = "txt";
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException, ParseException{
-        //TODO: Parsear y armar la query pedida
-        //query = .....
 
         //get properties from command line
         Properties props = parseCommandLine(args);
